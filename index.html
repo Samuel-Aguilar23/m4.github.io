@@ -1,0 +1,804 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+
+    <meta charset="UTF-8">
+    <title>EL UNIVERSAL</title>
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.3/dist/leaflet.css" />
+
+
+   <!-- Estilos CSS-->
+   <style>
+
+        html, body {
+            width:100%;
+            position:relative;
+            height: 100%; /* Asegura que el cuerpo y el documento HTML ocupen todo el alto de la pantalla */
+            margin: 0; /* Elimina el margen predeterminado del cuerpo */
+            padding: 0; /* Elimina el relleno predeterminado del cuerpo */
+        }
+
+        .title {
+      text-align: center; /* Centrar el título */
+    }
+
+    .highlight {
+      font-size: 40px; /* Tamaño de fuente predeterminado para la parte resaltada */
+    }
+
+    .white-text {
+      font-size: 36px; /* Tamaño de fuente predeterminado para el texto blanco */
+    }
+
+    @media (max-width: 768px) {
+      .highlight {
+        font-size: 30px; /* Reducir el tamaño de fuente de la parte resaltada en dispositivos con ancho igual o menor a 768px */
+      }
+
+      .white-text {
+        font-size: 24px; /* Reducir el tamaño de fuente del texto blanco en dispositivos con ancho igual o menor a 768px */
+      }
+    }
+
+    
+        /* Agregamos Mapa con dimensiones */
+        #map {
+            height: 70%; /* Establece la altura al 100% de la altura de la pantalla */
+            width: 100%; /* Establece el ancho al 100% del ancho de la pantalla */
+            position: relative;
+           
+        }
+
+        #svg-container {
+            position: absolute;
+            z-index: 1; 
+        }
+
+        /* Marcador de años */
+        #year-box {
+            background-color: #262626; /* Fondo blanco */
+            color: #ffffff; /* Texto blanco */
+            font-family: 'Acumin variable concept'; /* Tipo de fuente */
+            font-size: 25px; /* Tamaño de fuente */
+            padding: 10px; /* Espaciado interno */
+            border: 2px solid #262626; /* Borde de 2px negro */
+            border-radius: 4px; /* Bordes redondeados */
+            text-align: center; /* Alineación de texto al centro */
+            width: 100%; /* Ancho igual al del mapa */
+        }
+
+
+        /*Con este código corregimos los tiles blancos del mapa base*/
+        .leaflet-tile-container img { 
+            width: 276.5px !important;
+            height: 276.5px !important;
+        }
+        
+        .custom-popup {
+        background: #222222;
+        color: #fff;
+        font-size: 14px;
+        text-align: center;
+        padding: 8px;
+        border: none;
+        border-radius: 6px;
+        }
+
+        .custom-popup .leaflet-popup-content-wrapper {
+        background: transparent;
+        }
+
+        /* Estilo personalizado para el contenido del popup (texto) */
+        .custom-popup .leaflet-popup-content {
+            color: #ffffff;
+        }
+          /* Estilo del botón de reproducción */
+          #replay-button-container {
+            display: flex;
+            align-items: center;
+            align-items: center;
+            justify-content: center; /* Centra horizontalmente */
+            height: 10vh; /* Esto centrará verticalmente el botón en toda la altura de la ventana. Puedes ajustar este valor según tus necesidades. */
+            margin-top: -10px; /* Ajusta este valor negativo para moverlo hacia arriba */
+        }
+
+        #replay-text {
+            font-family: 'cursive', sans-serif; /* Establece el estilo de letra bonito */
+            font-size: 24px;
+            color: #F4A23E; /* Color del texto */
+            margin-top: -10px;/* Añadir margen en la parte superior para separar el texto del botón */
+        }
+
+        #replay-button {
+            padding-top: 5px; /* Añadir espacio superior al botón en dispositivos móviles */
+            background: transparent;
+            border: 3.5px solid white; /* Contorno de neón en color blanco */
+            border-radius: 50%; /* Esto asegura que el botón sea un círculo perfecto */
+            width: 20px; /* Ajusta el tamaño del botón en porcentaje del ancho (mismo valor que height) */
+            height: 20px; /* Ajusta el tamaño del botón en porcentaje del ancho (mismo valor que width) */
+            padding: 1%; /* Añadir relleno para que el botón sea más grande y táctil */
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            font-size: 30px;
+            color: #F4A23E; /* Color del contorno de neón */
+            cursor: pointer;
+            transition: background 0.3s, color 0.3s; /* Efecto de transición */
+            margin-right: 10px; /* Espacio entre el botón y el texto */
+            margin-top: -1px; /* Cambia el margen superior en dispositivos con ancho igual o menor a 768px */
+        }
+    
+    
+
+        /* Cambia el estilo del botón al pasar el mouse sobre él */
+        #replay-button:hover {
+            background: #F4A23E; /* Fondo amarillo al pasar el mouse */
+            color: #ffffff; /* Texto en negro */
+        }
+
+        /* Estilo del botón cuando se le da clic */
+        #replay-button:active {
+            background: #ffd000; /* Cambia el fondo a negro al hacer clic */
+        }
+
+        .leaflet-tile {
+        filter: hue-rotate(45deg) !important;
+        }
+
+        /* Estilos básicos del acordeón */
+        .accordion {
+            width: 500px;
+            margin: 0 auto; /* Centra el acordeón horizontalmente */
+        }
+        
+        .accordion-section {
+            border: 1px solid #F4A23E;
+            margin: 2px;
+            padding: 5px;
+            cursor: pointer;
+            padding: 2px 5px; /* Reducción de la altura del rectángulo */
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            transition: background-color 0.10s; /* Transición suave para el cambio de color */
+        }
+
+        .accordion-section:hover {
+            background-color: #dda35d; /* Agregar transparencia al fondo */
+        }
+        
+        .accordion-section.active {
+            background-color: #F4A23E; /* Color de fondo cuando está activo sin transparencia */
+        }
+        
+        .accordion-section p {
+            display: none;
+        }
+        
+        .accordion-section:hover {
+            background-color: #F4A23E;
+        }
+        
+        .accordion-section p {
+            display: none;
+        }
+
+        .arrow {
+            font-size: 20px;
+        }
+
+         /* Color blanco para el texto */
+         h2, .arrow, p {
+            color: white;
+        }
+
+        h2, .arrow, p {
+            text-align: center;
+            margin-bottom: 10px; /* Espacio entre "Sumario" y el texto */
+        }
+
+       .title {
+            font-size: 40px;
+            font-weight: bold;
+            color: #F4A23E;
+            opacity: 0;
+            white-space: nowrap;
+            overflow: hidden;
+            border-right: 0.15em solid white;
+            animation: typing 5s cubic-bezier(0.25, 0.1, 0.25, 1), fadeIn 3s ease-in-out forwards, hideCursor 0.5s 8s forwards;
+            text-align: center; /* Centrar el texto */
+        }
+
+@keyframes typing {
+    from {
+        width: 0;
+    }
+    to {
+        width: 100%;
+    }
+}
+
+@keyframes fadeIn {
+    0% {
+        opacity: 0;
+    }
+    100% {
+        opacity: 1;
+    }
+}
+
+@keyframes hideCursor {
+    0% {
+        border-right: 0.15em solid white;
+    }
+    100% {
+        border-right: 0.15em solid transparent;
+    }
+}
+
+.highlight {
+    color: #F4A23E; /* Color amarillo */
+}
+.white-text {
+    color: white; /* Color blanco */
+}
+.blinking-cursor {
+    display: inline-block;
+    animation: blink 0.8s infinite;
+}
+
+@keyframes blink {
+    0%, 100% {
+        border-right: 0.15em solid transparent;
+    }
+    50% {
+        border-right: 0.30em solid #ffffff;
+    }
+}
+
+p {
+      font-size: 18px; /* Tamaño de fuente predeterminado */
+      margin-bottom: 1px; 
+    }
+
+    @media (max-width: 768px) {
+      p {
+        font-size: 40%; /* Reducir el tamaño de fuente al 50% cuando el ancho de la pantalla es igual o menor a 768px */
+      }
+    }
+
+    </style>
+
+</head>
+
+<body style="background-color: #262626;">
+
+       <!--Título-->
+       <div class="title">
+        <span class="highlight">NarcoFiles: </span> <span class="white-text">El Nuevo Orden Criminal</span>
+    </div>
+
+
+    <div> <!--En este div se puede ajustar el acordeón-->
+        <div>
+            <span class="arrow"><!--▼--></span>
+            <p style="font-size: 18px;">A partir del análisis de más de 13 millones de reportes policiacos, operaciones de inteligencia y 
+                correos electrónicos de la Fiscalía General de la Nación de Colombia se encontraron más de 50 operaciones 
+                entre grupos criminales de todo el mundo que incluyen al menos a una persona de nacionalidad mexicana. 
+        </div>
+    </div>
+
+    <script>
+        const sections = document.querySelectorAll('.accordion-section');
+
+        sections.forEach(section => {
+            section.addEventListener('click', () => {
+                sections.forEach(s => {
+                    if (s !== section) {
+                        s.classList.remove('active');
+                        s.querySelector('p').style.display = 'none';
+                        s.querySelector('.arrow').textContent = '▼';
+                    }
+                });
+                section.classList.toggle('active');
+                section.querySelector('p').style.display = section.classList.contains('active') ? 'block' : 'none';
+                section.querySelector('.arrow').textContent = section.classList.contains('active') ? '▲' : '▼';
+            });
+        });
+    </script>
+
+    <!-- Div para el mapa de Leaflet -->
+    <div id="map"></div>
+
+    <!-- Marcador de años 
+    <div id="year-box"></div>-->
+
+    <!-- Nota al pie del mapa -->
+    <div class="notaPie">
+        <p style="font-size: 15px; color: white">
+            *Cada punto representa el número de operaciones por país. 
+            Varios países pueden estar involucrados en una misma operación. 
+        </p>      
+    </div>
+  
+      <!-- Botón de replay-->
+      <div id="replay-button-container">   
+        <div id="replay-button">&#10227;</div>
+        <div id="replay-text">Repetir la animación</div>
+    </div>
+
+    <!-- Agregamos links y scripts D3.js y Leaflet-->
+    <script src="https://d3js.org/d3.v5.min.js"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/d3-tip/0.9.1/d3-tip.min.css">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/d3-tip/0.9.1/d3-tip.min.js"></script>    
+    <script src="https://unpkg.com/leaflet@1.3/dist/leaflet.js"></script>
+    <link rel="stylesheet" href="Map/Map.geojson">
+
+    <!-- Load d3.js -->
+
+<script src="https://d3js.org/d3-scale-chromatic.v1.min.js"></script>
+<script src="https://d3js.org/d3-geo-projection.v2.min.js"></script>
+
+<!-- Proj4JS: Biblioteca de proyección -->
+<script src="https://cdnjs.cloudflare.com/ajax/libs/proj4js/2.6.0/proj4.js"></script>
+
+<!-- proj4leaflet: Integración de Proj4JS con Leaflet -->
+<script src="https://unpkg.com/proj4leaflet@1.1.0/dist/proj4leaflet.js"></script>
+
+    <!-- Script de mapa con variables cities: país|coordenada y routes: origen|destinos|año|mes -->
+    <script>
+    
+        //Añadimos vista inicial del mapa con coordenadas y nivel de zoom
+        const map = L.map('map').setView([14.9975635,-93.1607833],2.5);
+        map.invalidateSize(); // Actualiza el tamaño del mapa
+
+     L.tileLayer('https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png', {
+	        attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors &copy; <a href="https://carto.com/attributions">CARTO</a>',
+	        subdomains: 'abcd',
+            minZoom: 2.5,
+            maxZoom: 5,
+        }).addTo(map);
+
+
+ /*Carga el archivo GeoJSON y lo agrega al mapa como capa de polígonos.
+fetch('Map/Map.geojson')
+  .then(response => response.json())
+  .then(data => {
+    L.geoJSON(data, {
+      style: function (feature) {
+        // Establece el estilo de los polígonos, por ejemplo, el color de relleno.
+        return { 
+          fillColor: '#EBE7DB', // Color de relleno de los países
+          color: '#F4A23E', // Color del borde de los países
+          weight: 1, // Grosor del borde
+          fillOpacity: 0.45 // Opacidad del relleno
+            };
+      }
+    }).addTo(map);
+  })
+  .catch(error => {
+    console.error('Error al cargar el archivo GeoJSON:', error);
+  });
+*/  
+
+/*
+d3.json('Map/Map.geojson')
+.then(data => {
+    const PAÍS = topojson.feature(data, data.objects.countries);
+
+});
+*/
+
+
+        // Bloqueamos el control de zoom
+       // map.zoomControl.remove();
+
+        // Crear un objeto LatLngBounds que define los límites válidos para el mapa Leaflet
+            const validBounds = L.latLngBounds(
+                L.latLng(-70, -200), // Esquina inferior izquierda (Latitud mínima, Longitud mínima)
+                L.latLng(80, 200)   // Esquina superior derecha (Latitud máxima, Longitud máxima)
+            );
+
+        // Configurar los límites del mapa para que no se pueda desplazar más allá de los límites válidos
+        map.setMaxBounds(validBounds);
+
+        // También puedes configurar la opción maxBoundsViscosity para controlar la resistencia del límite
+        map.options.maxBoundsViscosity = 1.0;
+
+</script>
+
+
+<script>
+
+const cities = [
+           
+           //Países con coordenadas 
+           { name: "Colombia", coordinates: [0.6808359,-73.0757713], conexión: 48 },
+           { name: "El Salvador", coordinates: [13.73060289, -88.80171922], conexión: 2 },
+           { name: "Libano", coordinates: [33.9202654, 35.88802607], conexión: 2 },
+           { name: "México", coordinates: [20.7786832,-103.5658543], conexión: 42 },
+           { name: "Nicaragua", coordinates: [13.73060289, -88.80171922], conexión: 2 },
+           { name: "Panamá", coordinates: [8.91839249, -80.28476602], conexión: 4 },
+           { name: "Venezuela", coordinates: [6.1204334,-65.5495328], conexión: 5 },
+           { name: "Australia", coordinates: [-33.8123766,150.9848361], conexión: 5  },
+           { name: "Bahamas", coordinates: [24.61984519, -77.97112376], conexión: 1  },
+           { name: "Belgica", coordinates: [50.64285123, 4.663988677], conexión: 2 },
+           { name: "Belice", coordinates: [16.78646416, -89.29680617], conexión: 1 },
+           { name: "Brasil", coordinates: [-10.77302009, -53.09008606], conexión: 1 },
+           { name: "Costa Rica", coordinates: [13.73060289, -88.80171922], conexión: 3},
+           { name: "Ecuador", coordinates: [-2.1763484,-79.9034466], conexión: 3  },
+           { name: "España", coordinates: [41.38329958, 2.183370319], conexión: 2 },
+           { name: "Estados Unidos", coordinates: [36.151915,-93.6143814], conexión: 3 },
+           { name: "Guatemala", coordinates: [15.4849679,-89.3766158], conexión: 3 },
+           { name: "Holanda", coordinates: [51.42997316, 5.50001542], conexión: 2 },
+           { name: "Honduras", coordinates: [15.2563025,-86.3641649], conexión: 1 },
+           { name: "Trinidad y Tobago", coordinates: [10.45626295, -61.2482483], conexión: 1 },
+           { name: "China", coordinates: [22.3275659,114.1713702], conexión: 1 },
+           { name: "República Checa", coordinates: [50.0849594,14.4013487], conexión: 1 },
+           { name: "Malasia", coordinates: [4.4596655,101.932664], conexión: 1 },
+           { name: "Corea del Sur", coordinates: [35.1204998,129.0985136], conexión: 1 },
+           
+       ];
+ 
+           //Rutas por año : Origen|Destino|Año|Mes
+       const routes = [
+           //Rutas año 2019
+           { source: "Colombia", target: "México", year: 2015, month: "Marzo" },
+           { source: "México", target: "Colombia", year: 2019, month: "Enero" },
+           { source: "Colombia", target: "España", year: 2019, month: "Febrero" },
+           { source: "Colombia", target: "Estados Unidos", year: 2019, month: "Febrero" },
+           { source: "Colombia", target: "México", year: 2019, month: "Febrero" },
+           { source: "México", target: "Colombia", year: 2019, month: "Julio" },
+           { source: "México", target: "Colombia", year: 2019, month: "Julio" },
+           { source: "Colombia", target: "Panamá", year: 2019, month: "Agosto" },
+           { source: "Costa Rica", target: "Nicaragua", year: 2019, month: "Agosto" },
+           { source: "El Salvador", target: "México", year: 2019, month: "Agosto" },
+           { source: "México", target: "Colombia", year: 2019, month: "Agosto" },
+           { source: "Nicaragua", target: "El Salvador", year: 2019, month: "Agosto" },
+           { source: "Panamá", target: "Costa Rica", year: 2019, month: "Agosto" },
+           { source: "México", target: "Colombia", year: 2019, month: "Noviembre" },
+           { source: "Colombia", target: "México", year: 2019, month: "Noviembre" },
+           //Rutas año 2020
+           { source: "Colombia", target: "Malasia", year: 2020, month: "Enero" },
+           { source: "Malasia", target: "Australia", year: 2020, month: "Enero" },
+           { source: "México", target: "Colombia", year: 2020, month: "Junio" },
+           { source: "México", target: "Colombia", year: 2020, month: "Junio" },
+           { source: "Colombia", target: "México", year: 2020, month: "Julio" },
+           { source: "México", target: "Colombia", year: 2020, month: "Julio" },
+           { source: "México", target: "Colombia", year: 2020, month: "Julio" },
+           { source: "México", target: "Colombia", year: 2020, month: "Julio" },
+           { source: "México", target: "Colombia", year: 2020, month: "Julio" },
+           { source: "México", target: "Colombia", year: 2020, month: "Noviembre" },
+           { source: "Ecuador", target: "Belgica", year: 2020, month: "Noviembre" },
+           { source: "Belgica", target: "República Checa", year: 2020, month: "Noviembre" },
+           { source: "México", target: "Australia", year: 2020, month: "Diciembre" },
+           //Rutas año 2021
+           { source: "Colombia", target: "Holanda", year: 2021, month: "Marzo" },
+           { source: "México", target: "Colombia", year: 2021, month: "Marzo" },
+           { source: "Colombia", target: "Corea del Sur", year: 2021, month: "Marzo" },
+           { source: "Corea del Sur", target: "Australia", year: 2021, month: "Marzo" },
+           { source: "Colombia", target: "China", year: 2021, month: "Mayo" },
+           { source: "China", target: "Australia", year: 2021, month: "Mayo" },
+           { source: "Colombia", target: "Venezuela", year: 2021, month: "Julio" },
+           { source: "México", target: "Colombia", year: 2021, month: "Julio" },
+           { source: "Colombia", target: "Brasil", year: 2021, month: "Julio" },
+           { source: "México", target: "Estados Unidos", year: 2021, month: "Agosto" },
+           { source: "Colombia", target: "Panamá", year: 2021, month: "Septiembre"  },
+           { source: "México", target: "Colombia", year: 2021, month: "Septiembre" },
+           { source: "Panamá", target: "Costa Rica", year: 2021, month: "Septiembre" },
+           { source: "Colombia", target: "Australia", year: 2021, month: "Septiembre" },
+           { source: "México", target: "Colombia", year: 2021, month: "Septiembre" },
+           { source: "Colombia", target: "México", year: 2021, month: "Noviembre" },
+           { source: "México", target: "Colombia", year: 2021, month: "Noviembre" },
+           //Rutas año 2022
+           { source: "Colombia", target: "Venezuela", year: 2021, month: "Enero"  },
+           { source: "México", target: "Colombia", year: 2021, month: "Enero" },
+           { source: "México", target: "Colombia", year: 2022, month: "Enero" },
+           { source: "Colombia", target: "México", year: 2022, month: "Enero" },
+           { source: "Colombia", target: "España", year: 2022, month: "Enero" },
+           { source: "México", target: "Colombia", year: 2022, month: "Enero" },
+           { source: "México", target: "Colombia", year: 2022, month: "Enero" },
+           { source: "México", target: "Colombia", year: 2022, month: "Enero" },
+           { source: "México", target: "Libano", year: 2022, month: "Enero" },
+           { source: "Colombia", target: "Guatemala", year: 2022, month: "Febrero"  },
+           { source: "México", target: "Colombia", year: 2022, month: "Febrero"  },
+           { source: "México", target: "Colombia", year: 2022, month: "Febrero"  },
+           { source: "Colombia", target: "Venezuela", year: 2022, month: "Febrero"  },
+           { source: "México", target: "Colombia", year: 2022, month: "Febrero"  },
+           { source: "México", target: "Colombia", year: 2022, month: "Febrero"  },
+           { source: "Colombia", target: "Costa Rica", year: 2022, month: "Febrero"  },
+           { source: "Colombia", target: "Panamá", year: 2022, month: "Febrero"  },
+           { source: "México", target: "Colombia", year: 2022, month: "Febrero"  },
+           { source: "México", target: "Colombia", year: 2022, month: "Febrero"  },
+           { source: "Colombia", target: "Ecuador", year: 2022, month: "Marzo"  },
+           { source: "México", target: "Colombia", year: 2022,  month: "Marzo" },
+           { source: "México", target: "Colombia", year: 2022,  month: "Marzo" },
+           { source: "Colombia", target: "Ecuador", year: 2022,  month: "Marzo" },
+           { source: "Colombia", target: "El Salvador", year: 2022,  month: "Marzo" },
+           { source: "Colombia", target: "Guatemala", year: 2022,  month: "Marzo" },
+           { source: "Colombia", target: "Nicaragua", year: 2022,  month: "Marzo" },
+           { source: "Colombia", target: "Panamá", year: 2022,  month: "Marzo" },
+           { source: "México", target: "Colombia", year: 2022,  month: "Marzo" },
+           { source: "Colombia", target: "México", year: 2022, month: "Abril"  },
+           { source: "Colombia", target: "México", year: 2022, month: "Abril"  },
+           { source: "Colombia", target: "Trinidad y Tobago", year: 2022, month: "Abril"  },
+           { source: "Colombia", target: "Estados Unidos", year: 2022, month: "Abril"  },
+           { source: "Colombia", target: "México", year: 2022, month: "Abril"  },
+           { source: "Colombia", target: "Venezuela", year: 2022, month: "Abril"  },
+           { source: "México", target: "Colombia", year: 2022, month: "Abril"  },
+           { source: "Venezuela", target: "Bahamas", year: 2022, month: "Abril"  },
+           { source: "Venezuela", target: "Belice", year: 2022, month: "Abril"  },
+           { source: "Venezuela", target: "Guatemala", year: 2022, month: "Abril"  },
+           { source: "Venezuela", target: "Honduras", year: 2022, month: "Abril"  },
+           { source: "Venezuela", target: "México", year: 2022, month: "Abril"  },
+           { source: "Colombia", target: "Holanda", year: 2022, month: "Abril"  },
+           { source: "Colombia", target: "Belgica", year: 2022, month: "Abril"  },
+           { source: "Libano", target: "Colombia", year: 2022, month: "Mayo"  },
+           { source: "Libano", target: "Venezuela", year: 2022, month: "Mayo"  },    
+       ];
+
+         //Botón de Replay 
+        // Obtén una referencia al botón "Replay" por su ID
+        const replayButton = document.getElementById('replay-button');
+
+        // Agrega un controlador de eventos al botón para reiniciar la animación
+        replayButton.addEventListener('click', () => {
+        // Elimina las rutas y los marcadores actuales
+        svg.selectAll('path').remove();
+        svg.selectAll('circle').remove();
+
+        // Reinicia la animación
+        animateRoutes();
+        });
+
+        // Define el rango de tamaños de círculo (en píxeles)
+        const circleSizeRange = [0.2, 7];
+
+        //Crea una escala lineal para mapear la cantidad de conexiones a tamaños de círculo
+        const circleSizeScale = d3.scaleLinear()
+            .domain([0, d3.max(routes, d => countRoutesFromSource(d.source))]) // El dominio es de 0 al máximo de conexiones
+            .range(circleSizeRange); // El rango es el rango de tamaños de círculo
+
+        function countRoutesFromSource(source) {
+        return routes.filter(route => route.source === source).length;
+        }
+
+
+        //Agregamos svg para mapeo de rutas
+        const svgLayer = L.svg();
+        svgLayer.addTo(map);
+
+        map.getPanes().overlayPane.style.zIndex = 400; // Ajusta el valor según tus necesidades
+
+    
+        // Selecciona el div "svg-container" para instanciar los elementos SVG
+        const svg = d3.select(map.getPanes().overlayPane).select("svg");
+        const g = svg.append("g").attr("class", "leaflet-zoom-hide");
+
+        function animateRoutes() {
+
+        const uniqueYears = Array.from(new Set(routes.map(route => route.year)));
+        const uniqueMonths = Array.from(new Set(routes.map(route => route.month)));
+
+    const yearBox = document.getElementById('year-box');
+    
+    function animateRoutesForYearMonth(year, month) {
+
+        const routesOfYearMonth = routes.filter(route => route.year === year && route.month === month);
+
+        if (routesOfYearMonth.length > 0) {
+       //     yearBox.innerHTML = `
+ // <span style="font-size: 35px; color: #F4A23E; font-weight: bold;">Narcofiles:</span>
+  //<span style="font-size: 25px;"><strong>El Nuevo Orden Criminal</strong></span>
+//`;
+        //Período: </span> ${month} <span style="font-size: 30px; color: #FFD100;">-</span> ${year} esta linea es para hacer un marcador de meses/años OMITIR"
+
+            routesOfYearMonth.forEach((route, i) => {
+                drawRoute(route, year);
+                if (i === routesOfYearMonth.length - 1) {
+                    // Después de animar todas las rutas para el año y mes actual, pasa al siguiente mes
+                    setTimeout(() => {
+                        const nextMonthIndex = uniqueMonths.indexOf(month) + 1;
+                        if (nextMonthIndex < uniqueMonths.length) {
+                            animateRoutesForYearMonth(year, uniqueMonths[nextMonthIndex]);
+                        } else {
+                            // Si no hay más meses para el año actual, pasa al siguiente año
+                            const nextYearIndex = uniqueYears.indexOf(year) + 1;
+                            if (nextYearIndex < uniqueYears.length) {
+                                animateRoutesForYearMonth(uniqueYears[nextYearIndex], uniqueMonths[0]);
+                            }
+                        }
+                    }, 600);
+                }
+            });
+        } else {
+            // Si no hay rutas para el año y mes actual, pasa al siguiente mes o año
+            const nextMonthIndex = uniqueMonths.indexOf(month) + 1;
+            if (nextMonthIndex < uniqueMonths.length) {
+                animateRoutesForYearMonth(year, uniqueMonths[nextMonthIndex]);
+            } else {
+                const nextYearIndex = uniqueYears.indexOf(year) + 1;
+                if (nextYearIndex < uniqueYears.length) {
+                    animateRoutesForYearMonth(uniqueYears[nextYearIndex], uniqueMonths[0]);
+                }
+            }
+        }
+    }
+
+    // Comienza la animación desde el primer año y mes encontrados
+    if (uniqueYears.length > 0 && uniqueMonths.length > 0) {
+        animateRoutesForYearMonth(uniqueYears[0], uniqueMonths[0]);
+        }
+
+    }
+
+           // Generate random control point coordinates
+            function getRandomControlPoint(sourceLatLng, targetLatLng) {
+            const x = [0.5 - Math.random() * 5];
+            const y = [0.5 - Math.random() * 5];
+            return [x, y];
+            }
+
+    // Función para dibujar ruta por año y mes
+    function drawRoute(route, year, month) {
+
+            // Accede al año usando el parámetro "year"
+            console.log(`Dibujando ruta para el año ${year} y el mes ${month}`);
+
+            const circleSize = circleSizeScale(countRoutesFromSource(route.source));
+
+            const sourceCity = cities.find(city => city.name === route.source);
+            const targetCity = cities.find(city => city.name === route.target);
+            console.log(sourceCity, targetCity)
+            const sourceLatLng = L.latLng(sourceCity.coordinates[0], sourceCity.coordinates[1]);
+            const targetLatLng = L.latLng(targetCity.coordinates[0], targetCity.coordinates[1]);
+
+            const sourcePoint = map.latLngToLayerPoint(sourceLatLng);
+            const targetPoint = map.latLngToLayerPoint(targetLatLng);
+
+
+            // Calcular el punto medio de la ruta
+            const middlePoint = [
+                (sourcePoint.x + targetPoint.x) / 2,
+                (sourcePoint.y + targetPoint.y) / 2
+            ];
+
+            // Calcular el controlPoint1 como un punto que está en la dirección deseada desde el punto medio
+            const controlPoint1 = [
+                middlePoint[0] + (sourcePoint.x - middlePoint[0]) * 0.40 + (Math.random() - 0.5) * 30, // Ajusta la magnitud del desplazamiento en x y agrega aleatoriedad
+                middlePoint[1] + (sourcePoint.y - middlePoint[1]) * 2 + (Math.random() - 0.5) * 30 // Ajusta la magnitud del desplazamiento en y y agrega aleatoriedad
+            ];
+
+            // Calcular el controlPoint2 como un punto que está en la dirección deseada desde el punto medio
+            const controlPoint2 = [
+                middlePoint[0] + (targetPoint.x - middlePoint[0]) * 0.30 + (Math.random() - 0.5) * 30, // Ajusta la magnitud del desplazamiento en x y agrega aleatoriedad
+                middlePoint[1] + (targetPoint.y - middlePoint[1]) * 2 + (Math.random() - 0.5) * 30 // Ajusta la magnitud del desplazamiento en y y agrega aleatoriedad
+            ];
+
+            // Generamos puntos aleatorios de control con las curvas bezier
+            const controlPoints = getRandomControlPoint(sourceLatLng, targetLatLng);
+            const pathData = `M${sourcePoint.x},${sourcePoint.y}C${controlPoint1[0]},${controlPoint1[1]},${controlPoint2[0]},${controlPoint2[1]},${targetPoint.x},${targetPoint.y}`;
+
+            
+            //Agregar el círculo origen al grupo SVG  
+            g.append("circle") 
+                .attr("cx", sourcePoint.x)
+                .attr("cy", sourcePoint.y)
+                .attr("r", 0.2)                   // Establece el tamaño del círculo
+                .attr("fill", "#F4A23E")         // Color del círculo
+                .attr("stroke", "#C65840")      // Color del contorno (borde)
+                .attr("stroke-width", 1.5)       // Ancho del contorno (borde)
+                .attr("opacity", 0.6)
+                .transition()
+                .duration(600)               // Duración de la animación
+                .attr("r", circleSize)      // Aumenta el radio al tamaño calculado    
+                .on("end", function () {
+        // Agregar configuraciones
+                });
+
+        // Agregar círculo destino al grupo SVG
+            g.append("circle")  
+                .attr("cx", targetPoint.x)
+                .attr("cy", targetPoint.y)
+                .attr("r", 0.2)                   // Establece el tamaño del círculo
+                .attr("fill", "#F4A23E")         // Color del círculo
+                .attr("stroke", "#C65840")      // Color del contorno (borde)
+                .attr("stroke-width", 2)       // Ancho del contorno (borde)
+                .attr("opacity", .6)                
+                .transition()
+                .duration(600)               // Duración de la animación
+                .attr("r", circleSize)      // Aumenta el radio al tamaño calculado
+                .on("end", function () {
+                                          // Agregar configuraciones
+                });
+
+
+        //Agregar la ruta al grupo SVG
+            g.append("path")
+                .attr("d", pathData)
+                .attr("sourceCity", sourceCity.name)
+                .attr("targetCity", targetCity.name)
+                .attr("stroke", "#F4A23E")   // Color de la ruta "path"
+                .attr("stroke-width", 0.4)
+                .attr("fill", "none")
+                .attr("opacity", 0.7)
+                .transition()
+                .duration(200)            // Duración de la animación
+                .attr("opacity", 0.7)
+                .on("end", function () {
+                                        // Agregar configuraciones
+                });
+            };
+
+
+ 
+        //Iniciar la animación de las rutas
+            animateRoutes();
+
+// Función para mostrar y ocultar rutas
+
+function updateRoutesVisibility(pathData, show) {
+  console.log(`updateRoutesVisibility called with countryName: ${pathData}, show: ${show}`);
+}
+
+// Función para ocultar rutas no relacionadas con un país específico
+function updateRoutesVisibility(countryName, show) {
+  // Obtenemos todas las rutas en el grupo SVG
+  const paths = g.selectAll('path');
+
+  // Iteramos sobre las rutas y ajustamos la visibilidad
+  paths.each(function(d) {
+    const path = d3.select(this);
+    console.log(path,countryName)
+    if (path.attr('sourceCity') !== countryName && path.attr('targetCity') !== countryName) {
+      // Si la ruta no está relacionada con el país, la ocultamos
+      path.style('display', show ? 'block' : 'none');
+    }
+  });
+}
+
+// Función para crear y personalizar los marcadores
+cities.forEach(city => {
+  const marker = L.marker(city.coordinates, { icon: L.divIcon({ className: 'invisible-icon' }) }).addTo(map);
+
+  const popupContent = `<b><span style="color: #F4A23E;">País: </span>${city.name}</b><br>No. operaciones: ${city.conexión}`;
+
+  const popup = L.popup({
+    className: 'custom-popup',
+    closeButton: false,
+    closeOnClick: false
+  })
+  .setLatLng(city.coordinates)
+  .setContent(popupContent);
+
+  marker.bindPopup(popup);
+
+  marker.on('mouseover', function () {
+    this.openPopup();
+    updateRoutesVisibility(city.name, false); // Mostrar rutas relacionadas con el país de origen
+  });
+
+  marker.on('mouseout', function () {
+    this.closePopup();
+    updateRoutesVisibility(city.name, true); // Ocultar rutas no relacionadas con el país de origen
+  });
+});
+
+
+
+
+// Agrega un evento al mapa para escuchar el evento 'zoomend'
+map.on('zoomend', function () {
+    
+    // Limpia las rutas y los puntos de origen y destino actuales
+    svg.selectAll('path').remove();
+    svg.selectAll('circle').remove();
+
+    animateRoutes();
+  
+});
+
+    </script>
+</body>
+</html>
